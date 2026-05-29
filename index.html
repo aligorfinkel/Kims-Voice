@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' https://api.elevenlabs.io; media-src blob:;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kim's Voice">
+<title>Kim's Voice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #C94F7C;
+    --pink-deep: #8B2D52;
+    --pink-light: #F2C4D8;
+    --pink-pale: #FBF0F4;
+    --emerald: #1A7A5E;
+    --emerald-light: #E0F2EC;
+    --cream: #FDF8F2;
+    --ink: #1C1410;
+    --ink-mid: #4A3728;
+    --ink-muted: #8C7068;
+    --border: rgba(28,20,16,0.1);
+    --border-mid: rgba(28,20,16,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 0 0 40px;
+  }
+
+  .header {
+    background: var(--pink);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .header-mosaic {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 3px;
+    opacity: 0.18;
+  }
+
+  .mosaic-block { background: var(--ink); }
+  .mosaic-block:nth-child(2) { background: var(--emerald); }
+  .mosaic-block:nth-child(4) { background: var(--pink-deep); }
+  .mosaic-block:nth-child(6) { background: var(--emerald); }
+
+  .header-stripe {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: var(--ink);
+  }
+
+  .header-content {
+    position: relative;
+    padding: 48px 22px 24px;
+  }
+
+  .header-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+  }
+
+  .header-title em {
+    font-style: italic;
+    font-weight: 400;
+    display: block;
+    font-size: 52px;
+    color: var(--ink);
+  }
+
+  .header-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 18px;
+  }
+
+  .header-tag {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    font-weight: 400;
+  }
+
+  .header-dot-row {
+    display: flex;
+    gap: 5px;
+  }
+
+  .header-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+  }
+
+  .header-dot:first-child { background: #fff; }
+
+  /* ElevenLabs setup banner */
+  .el-banner {
+    margin: 16px 20px 0;
+    background: #fff;
+    border: 1px solid var(--border-mid);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .el-banner-header {
+    background: var(--ink);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .el-banner-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pink-light);
+    font-weight: 500;
+  }
+
+  .el-banner-toggle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .el-banner-body {
+    padding: 14px;
+    display: none;
+  }
+
+  .el-banner-body.open { display: block; }
+
+  .el-input-label {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .el-input {
+    width: 100%;
+    border: 1px solid var(--border-mid);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    background: var(--cream);
+    outline: none;
+    margin-bottom: 10px;
+  }
+
+  .el-input:focus { border-color: var(--pink); }
+
+  .el-save-btn {
+    width: 100%;
+    background: var(--pink);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+  }
+
+  .el-save-btn:active { transform: scale(0.98); }
+
+  .el-status {
+    font-size: 12px;
+    color: var(--emerald);
+    margin-top: 8px;
+    text-align: center;
+    min-height: 16px;
+    font-style: italic;
+  }
+
+  .el-active-badge {
+    display: none;
+    font-size: 10px;
+    background: var(--emerald-light);
+    color: var(--emerald);
+    border-radius: 50px;
+    padding: 3px 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  /* Speak area */
+  .speak-section { padding: 16px 20px 0; }
+
+  .speak-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .speak-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 18px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    background: transparent;
+    line-height: 1.55;
+    min-height: 110px;
+    padding: 18px 18px 12px;
+    font-weight: 300;
+  }
+
+  .speak-textarea::placeholder {
+    color: var(--ink-muted);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .speak-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .char-count { font-size: 12px; color: var(--ink-muted); flex: 1; }
+
+  .clear-text {
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: var(--ink-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .speak-btn {
+    background: var(--pink);
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    padding: 12px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .speak-btn:active { transform: scale(0.97); }
+  .speak-btn.speaking { background: var(--pink-deep); }
+
+  .speak-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .status-bar {
+    text-align: center;
+    font-size: 12px;
+    color: var(--pink);
+    min-height: 20px;
+    padding: 8px 0 0;
+    font-style: italic;
+  }
+
+  /* Phrases */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 20px 12px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 500;
+  }
+
+  .phrases-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 0 20px;
+  }
+
+  .phrase-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .phrase-btn:active {
+    background: var(--pink-pale);
+    border-color: var(--pink-light);
+    transform: scale(0.98);
+  }
+
+  .phrase-cat {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pink);
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .phrase-text {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .phrase-btn.saved .phrase-cat { color: var(--emerald); }
+  .phrase-btn.saved { border-color: rgba(26,122,94,0.2); }
+
+  /* Add phrase */
+  .add-phrase-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px 0;
+  }
+
+  .add-input {
+    flex: 1;
+    border: 1px solid var(--border-mid);
+    border-radius: 50px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    background: #fff;
+    outline: none;
+  }
+
+  .add-input:focus { border-color: var(--pink); }
+  .add-input::placeholder { color: var(--ink-muted); }
+
+  .add-btn {
+    background: var(--emerald-light);
+    border: 1px solid rgba(26,122,94,0.25);
+    border-radius: 50px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--emerald);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .add-btn:active { transform: scale(0.97); }
+
+  /* Voice settings */
+  .voice-card {
+    margin: 0 20px;
+    background: var(--ink);
+    border-radius: 20px;
+    padding: 18px 18px 20px;
+  }
+
+  .voice-card-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+
+  .voice-select {
+    width: 100%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .voice-section-el { display: none; }
+  .voice-section-el.active { display: block; }
+  .voice-section-browser { display: block; }
+  .voice-section-browser.hidden { display: none; }
+
+  .el-voice-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-style: italic;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .slider-row:last-child { margin-bottom: 0; }
+
+  .slider-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    min-width: 40px;
+    font-weight: 300;
+  }
+
+  .slider-val {
+    font-size: 12px;
+    color: var(--pink-light);
+    min-width: 30px;
+    text-align: right;
+    font-weight: 500;
+  }
+
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--pink);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-stripe"></div>
+    <div class="header-mosaic">
+      <div class="mosaic-block"></div>
+      <div class="mosaic-block"></div>
+      <div class="mosaic-block"></div>
+      <div class="mosaic-block"></div>
+      <div class="mosaic-block"></div>
+      <div class="mosaic-block"></div>
+    </div>
+    <div class="header-content">
+      <div class="header-eyebrow">voice rest toolkit</div>
+      <div class="header-title">KIM'S<em>Voice.</em></div>
+      <div class="header-bottom">
+        <span class="header-tag">est. 2026</span>
+        <div class="header-dot-row">
+          <div class="header-dot"></div>
+          <div class="header-dot"></div>
+          <div class="header-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ElevenLabs setup -->
+  <div class="el-banner">
+    <div class="el-banner-header" onclick="toggleELSetup()">
+      <span class="el-banner-title" id="el-banner-title">Connect Kim's cloned voice</span>
+      <span class="el-active-badge" id="el-active-badge">Kim's voice active</span>
+      <span class="el-banner-toggle" id="el-toggle-label">set up &darr;</span>
+    </div>
+    <div class="el-banner-body" id="el-banner-body">
+      <div class="el-input-label">ElevenLabs API key</div>
+      <input class="el-input" type="password" id="el-api-key" placeholder="sk-..." />
+      <div class="el-input-label">Voice ID</div>
+      <input class="el-input" type="text" id="el-voice-id" placeholder="paste voice ID here" />
+      <button class="el-save-btn" onclick="saveEL()">Save &amp; use Kim's voice</button>
+      <div class="el-status" id="el-status"></div>
+    </div>
+  </div>
+
+  <!-- Speak area -->
+  <div class="speak-section">
+    <div class="speak-card">
+      <textarea class="speak-textarea" id="main-text" placeholder="What does Kim want to say..."></textarea>
+      <div class="speak-footer">
+        <span class="char-count" id="char-count">0 characters</span>
+        <button class="clear-text" onclick="clearText()">clear</button>
+        <button class="speak-btn" id="speak-btn" onclick="speakText()">
+          <svg class="speak-icon" id="speak-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span id="speak-label">Speak</span>
+        </button>
+      </div>
+    </div>
+    <div class="status-bar" id="status"></div>
+  </div>
+
+  <!-- Quick phrases -->
+  <div class="section-header">
+    <span class="section-label">Quick phrases</span>
+  </div>
+  <div class="phrases-grid" id="phrases-grid"></div>
+
+  <div class="add-phrase-row">
+    <input class="add-input" type="text" id="new-phrase" placeholder="Save a new phrase..." />
+    <button class="add-btn" onclick="addPhrase()">+ Save</button>
+  </div>
+
+  <!-- Voice settings -->
+  <div class="section-header" style="padding-top:28px;">
+    <span class="section-label">Voice settings</span>
+  </div>
+
+  <div class="voice-card">
+    <div class="voice-card-label">customize</div>
+
+    <div class="voice-section-el" id="voice-section-el">
+      <div class="el-voice-note">Using Kim's cloned voice via ElevenLabs.</div>
+      <div class="slider-row">
+        <span class="slider-label">Speed</span>
+        <input type="range" min="0.5" max="1.8" step="0.1" value="1.0" id="el-rate" oninput="updateVal('el-rate','el-rate-val','x')" />
+        <span class="slider-val" id="el-rate-val">1.0x</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Similarity</span>
+        <input type="range" min="0" max="1" step="0.05" value="0.85" id="el-similarity" oninput="updateVal('el-similarity','el-similarity-val','')" />
+        <span class="slider-val" id="el-similarity-val">0.85</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Expression</span>
+        <input type="range" min="0" max="1" step="0.05" value="0.5" id="el-expression" oninput="updateVal('el-expression','el-expression-val','')" />
+        <span class="slider-val" id="el-expression-val">0.5</span>
+      </div>
+    </div>
+
+    <div class="voice-section-browser" id="voice-section-browser">
+      <select class="voice-select" id="voice-select" onchange="saveSettings()">
+        <option>Loading voices...</option>
+      </select>
+      <div class="slider-row">
+        <span class="slider-label">Speed</span>
+        <input type="range" min="0.5" max="1.8" step="0.1" value="1.0" id="rate" oninput="updateVal('rate','rate-val','x'); saveSettings()" />
+        <span class="slider-val" id="rate-val">1.0x</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Pitch</span>
+        <input type="range" min="0.5" max="2.0" step="0.1" value="1.1" id="pitch" oninput="updateVal('pitch','pitch-val',''); saveSettings()" />
+        <span class="slider-val" id="pitch-val">1.1</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DEFAULT_PHRASES = [
+  { cat: "iconic", text: "Hey guys!" },
+  { cat: "iconic", text: "Fit check." },
+  { cat: "iconic", text: "Totally." },
+  { cat: "iconic", text: "I really want some ramen." },
+  { cat: "iconic", text: "I'm just a girl." },
+];
+
+let phrases = JSON.parse(localStorage.getItem('kim_phrases_v2') || 'null') || DEFAULT_PHRASES;
+let isSpeaking = false;
+let currentAudio = null;
+let elSetupOpen = false;
+
+function getELCreds() {
+  return {
+    key: localStorage.getItem('el_api_key') || 'sk_3975769df446153dc5caeb1ec44e4838f43540882a1ccd42',
+    voiceId: localStorage.getItem('el_voice_id') || 'RVe2oKdTIDfy51i85W3c'
+  };
+}
+
+function isELActive() {
+  const c = getELCreds();
+  return c.key && c.voiceId;
+}
+
+function updateELUI() {
+  const active = isELActive();
+  document.getElementById('voice-section-el').classList.toggle('active', active);
+  document.getElementById('voice-section-browser').classList.toggle('hidden', active);
+  document.getElementById('el-active-badge').style.display = active ? 'inline-block' : 'none';
+  document.getElementById('el-banner-title').style.display = active ? 'none' : 'inline';
+}
+
+function toggleELSetup() {
+  elSetupOpen = !elSetupOpen;
+  document.getElementById('el-banner-body').classList.toggle('open', elSetupOpen);
+  document.getElementById('el-toggle-label').textContent = elSetupOpen ? 'close ↑' : (isELActive() ? 'edit ↓' : 'set up ↓');
+  if (elSetupOpen) {
+    const c = getELCreds();
+    if (c.key) document.getElementById('el-api-key').value = c.key;
+    if (c.voiceId) document.getElementById('el-voice-id').value = c.voiceId;
+  }
+}
+
+function saveEL() {
+  const key = document.getElementById('el-api-key').value.trim();
+  const voiceId = document.getElementById('el-voice-id').value.trim();
+  if (!key || !voiceId) { document.getElementById('el-status').textContent = 'Both fields are required.'; return; }
+  localStorage.setItem('el_api_key', key);
+  localStorage.setItem('el_voice_id', voiceId);
+  document.getElementById('el-status').textContent = "Saved! Kim's voice is ready.";
+  updateELUI();
+  setTimeout(() => {
+    document.getElementById('el-banner-body').classList.remove('open');
+    elSetupOpen = false;
+    document.getElementById('el-toggle-label').textContent = 'edit ↓';
+  }, 1200);
+}
+
+document.getElementById('main-text').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length + ' characters';
+});
+
+function clearText() {
+  document.getElementById('main-text').value = '';
+  document.getElementById('char-count').textContent = '0 characters';
+}
+
+function savePhrases() {
+  localStorage.setItem('kim_phrases_v2', JSON.stringify(phrases));
+}
+
+function saveSettings() {
+  localStorage.setItem('kim_voice_idx', document.getElementById('voice-select').selectedIndex);
+  localStorage.setItem('kim_rate', document.getElementById('rate').value);
+  localStorage.setItem('kim_pitch', document.getElementById('pitch').value);
+}
+
+function updateVal(inputId, outputId, suffix) {
+  const val = parseFloat(document.getElementById(inputId).value).toFixed(1);
+  document.getElementById(outputId).textContent = val + suffix;
+}
+
+function renderPhrases() {
+  const grid = document.getElementById('phrases-grid');
+  grid.innerHTML = '';
+  phrases.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'phrase-btn' + (p.cat === 'saved' ? ' saved' : '');
+    btn.innerHTML = `<span class="phrase-cat">${p.cat}</span><span class="phrase-text">${p.text}</span>`;
+    btn.onclick = () => {
+      document.getElementById('main-text').value = p.text;
+      document.getElementById('char-count').textContent = p.text.length + ' characters';
+      speakText();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function addPhrase() {
+  const input = document.getElementById('new-phrase');
+  const text = input.value.trim();
+  if (!text) return;
+  phrases.unshift({ cat: 'saved', text });
+  savePhrases();
+  renderPhrases();
+  input.value = '';
+}
+
+document.getElementById('new-phrase').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addPhrase();
+});
+
+function loadVoices() {
+  const all = speechSynthesis.getVoices();
+  if (!all.length) return;
+  const sel = document.getElementById('voice-select');
+  sel.innerHTML = '';
+  const en = all.filter(v => v.lang.startsWith('en'));
+  const rest = all.filter(v => !v.lang.startsWith('en'));
+  [...en, ...rest].forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = v.name + ' (' + v.lang + ')';
+    sel.appendChild(opt);
+  });
+  const savedIdx = localStorage.getItem('kim_voice_idx');
+  if (savedIdx !== null) sel.selectedIndex = parseInt(savedIdx);
+  const savedRate = localStorage.getItem('kim_rate');
+  const savedPitch = localStorage.getItem('kim_pitch');
+  if (savedRate) { document.getElementById('rate').value = savedRate; updateVal('rate','rate-val','x'); }
+  if (savedPitch) { document.getElementById('pitch').value = savedPitch; updateVal('pitch','pitch-val',''); }
+}
+
+async function speakWithEL(text) {
+  const { key, voiceId } = getELCreds();
+  const speed = parseFloat(document.getElementById('el-rate').value);
+  setStatus("getting Kim's voice...");
+  setSpeaking(true);
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: { stability: 1 - parseFloat(document.getElementById('el-expression').value), similarity_boost: parseFloat(document.getElementById('el-similarity').value), speed }
+      })
+    });
+    if (!res.ok) { throw new Error('API error ' + res.status); }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+    currentAudio.onerror = () => { setSpeaking(false); setStatus("Audio error — check your API key."); };
+    setStatus("speaking...");
+    currentAudio.play();
+  } catch(e) {
+    setSpeaking(false);
+    setStatus("Couldn't connect — check your API key and voice ID.");
+  }
+}
+
+function speakWithBrowser(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  const all = speechSynthesis.getVoices();
+  const en = all.filter(v => v.lang.startsWith('en'));
+  const pool = [...en, ...all];
+  const idx = document.getElementById('voice-select').selectedIndex;
+  if (pool[idx]) utterance.voice = pool[idx];
+  utterance.rate = parseFloat(document.getElementById('rate').value);
+  utterance.pitch = parseFloat(document.getElementById('pitch').value);
+  utterance.onstart = () => setSpeaking(true);
+  utterance.onend = () => setSpeaking(false);
+  utterance.onerror = () => { setSpeaking(false); setStatus("Couldn't speak — try a different voice."); };
+  speechSynthesis.speak(utterance);
+}
+
+function speakText() {
+  const text = document.getElementById('main-text').value.trim();
+  if (!text) { setStatus("Type something first!"); return; }
+
+  if (isSpeaking) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    else { speechSynthesis.cancel(); }
+    setSpeaking(false);
+    return;
+  }
+
+  if (isELActive()) {
+    speakWithEL(text);
+  } else {
+    speakWithBrowser(text);
+  }
+}
+
+function setSpeaking(val) {
+  isSpeaking = val;
+  const btn = document.getElementById('speak-btn');
+  const icon = document.getElementById('speak-icon');
+  const label = document.getElementById('speak-label');
+  if (val) {
+    btn.classList.add('speaking');
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+    label.textContent = 'Stop';
+  } else {
+    btn.classList.remove('speaking');
+    icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    label.textContent = 'Speak';
+    setStatus('');
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+renderPhrases();
+updateELUI();
+</script>
+</body>
+</html>
