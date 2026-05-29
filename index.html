@@ -595,13 +595,13 @@
       </div>
       <div class="slider-row">
         <span class="slider-label">Similarity</span>
-        <input type="range" min="0" max="1" step="0.05" value="0.85" id="el-similarity" oninput="updateVal('el-similarity','el-similarity-val','')" />
-        <span class="slider-val" id="el-similarity-val">0.85</span>
+        <input type="range" min="0" max="1" step="0.05" value="1" id="el-similarity" oninput="updateVal('el-similarity','el-similarity-val','')" />
+        <span class="slider-val" id="el-similarity-val">1.00/span>
       </div>
       <div class="slider-row">
         <span class="slider-label">Expression</span>
-        <input type="range" min="0" max="1" step="0.05" value="0.5" id="el-expression" oninput="updateVal('el-expression','el-expression-val','')" />
-        <span class="slider-val" id="el-expression-val">0.5</span>
+        <input type="range" min="0" max="1" step="0.05" value="0" id="el-expression" oninput="updateVal('el-expression','el-expression-val','')" />
+        <span class="slider-val" id="el-expression-val">0.00/span>
       </div>
     </div>
 
@@ -759,11 +759,24 @@ function loadVoices() {
   if (savedPitch) { document.getElementById('pitch').value = savedPitch; updateVal('pitch','pitch-val',''); }
 }
 
+let sharedAudioContext = null;
+
+function getAudioContext() {
+  if (!sharedAudioContext) {
+    sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume();
+  }
+  return sharedAudioContext;
+}
+
 async function speakWithEL(text) {
   const { key, voiceId } = getELCreds();
   const speed = parseFloat(document.getElementById('el-rate').value);
   const stability = 1 - parseFloat(document.getElementById('el-expression').value);
   const similarity_boost = parseFloat(document.getElementById('el-similarity').value);
+  const audioContext = getAudioContext();
   setStatus("getting Kim's voice...");
   setSpeaking(true);
   try {
@@ -781,7 +794,6 @@ async function speakWithEL(text) {
     });
     if (!res.ok) { throw new Error('API error ' + res.status); }
     const arrayBuffer = await res.arrayBuffer();
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
@@ -817,13 +829,14 @@ function speakText() {
   if (!text) { setStatus("Type something first!"); return; }
 
   if (isSpeaking) {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (currentAudio) { try { currentAudio.stop(); } catch(e) {} currentAudio = null; }
     else { speechSynthesis.cancel(); }
     setSpeaking(false);
     return;
   }
 
   if (isELActive()) {
+    getAudioContext();
     speakWithEL(text);
   } else {
     speakWithBrowser(text);
