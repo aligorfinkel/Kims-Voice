@@ -804,7 +804,7 @@ async function speakWithEL(text) {
     currentAudio = source;
   } catch(e) {
     setSpeaking(false);
-    setStatus("Couldn't connect — check your API key and voice ID.");
+    setStatus("Error: " + e.message);
     console.log('EL error:', e);
   }
 }
